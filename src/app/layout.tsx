@@ -31,6 +31,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${dancingScript.variable} ${playfairDisplay.variable} font-inter antialiased`}
+        suppressHydrationWarning
       >
         {children}
       </body>

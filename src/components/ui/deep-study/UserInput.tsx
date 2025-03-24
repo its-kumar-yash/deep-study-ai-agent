@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { set, z } from "zod"; // zod is a TypeScript-first schema declaration and validation library.
+import { z } from "zod"; // zod is a TypeScript-first schema declaration and validation library.
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -14,14 +14,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useDeepStudyStore } from "@/store/deepstudy";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   input: z.string().min(2).max(200),
 });
 
 export default function UserInput() {
-  const { setQuestions, setTopic } = useDeepStudyStore();
-  const [isLoading, setIsLoading] = useState(false);
+  const { setQuestions, setTopic, isLoading, setIsLoading } = useDeepStudyStore();
 
   // useForm is a custom hook for managing forms in React.
   // It is built on top of React Hook Form, a library that provides a simple way to manage forms in React.
@@ -43,9 +43,9 @@ export default function UserInput() {
         body: JSON.stringify({ topic: values.input }),
       });
       const data = await response.json();
+      console.log("Data", data);
       setTopic(values.input);
-      setQuestions(data);
-      console.log(data);
+      setQuestions(data.questions);
       form.reset();
     } catch (error) {
       console.log(error);
@@ -78,9 +78,17 @@ export default function UserInput() {
         />
         <Button
           type="submit"
-          className="rounded-full px-6 cursor-pointer h-11 w-28"
+          className="rounded-full px-6 cursor-pointer h-11"
+          disabled={isLoading}
         >
-          Submit
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            "Submit"
+          )}
         </Button>
       </form>
     </Form>

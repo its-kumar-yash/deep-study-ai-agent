@@ -24,7 +24,7 @@ const clarifyResearchGoals = async (topic: string) => {
       prompt,
       schema: z.object({
         questions: z.array(z.string()),
-      })
+      }),
     });
     return object.questions;
   } catch (e) {
@@ -38,12 +38,9 @@ export async function POST(req: Request) {
   try {
     const questions = await clarifyResearchGoals(topic);
     console.log("Questions:", questions);
-    return NextResponse.json(
-        {
-            success: true,
-            questions,
-        },
-    );
+    return NextResponse.json({
+      questions,
+    });
   } catch (e) {
     console.error("Error generating questions:", e);
     return NextResponse.json(
