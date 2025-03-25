@@ -2,17 +2,26 @@ import { z } from "zod";
 import { ResearchFindings, ResearchState, SearchResult } from "./type";
 import { callModel } from "./model-caller";
 import {
+  ANALYSIS_SYSTEM_PROMPT,
   EXTRACTION_SYSTEM_PROMPT,
+  getAnalysisPrompt,
   getExtractionPrompt,
   getPlanningPrompt,
   PLANNING_SYSTEM_PROMPT,
 } from "./prompts";
 import { exa } from "./services";
+import { combineFindings } from "./utils";
+import {
+  MAX_CONTENT_CHARS,
+  MAX_ITERATIONS,
+  MAX_SEARCH_RESULTS,
+  MODELS,
+} from "./constants";
 
 export async function generateSearchQueries(researchState: ResearchState) {
   const result = await callModel(
     {
-      model: "google/gemini-2.0-pro-exp-02-05:free",
+      model: MODELS.PLANNING,
       prompt: getPlanningPrompt(
         researchState.topic,
         researchState.clarificationsText
@@ -39,7 +48,7 @@ export async function search(
   try {
     const searchResult = await exa.searchAndContents(query, {
       type: "keyword",
-      numResults: 1,
+      numResults: MAX_SEARCH_RESULTS,
       startPublishedDate: new Date(
         Date.now() - 365 * 24 * 60 * 60 * 1000
       ).toISOString(),
@@ -50,7 +59,7 @@ export async function search(
       endCrawlDate: new Date().toISOString(),
       excludeDomains: ["https://www.youtube.com"],
       text: {
-        maxCharacters: 20000,
+        maxCharacters: MAX_CONTENT_CHARS,
       },
     });
 
@@ -77,7 +86,7 @@ export async function extractContent(
 ) {
   const result = await callModel(
     {
-      model: "google/gemini-2.0-flash-lite-preview-02-05:free",
+      model: MODELS.EXTRACTION,
       prompt: getExtractionPrompt(
         content,
         ResearchState.topic,
@@ -86,14 +95,14 @@ export async function extractContent(
       system: EXTRACTION_SYSTEM_PROMPT,
       schema: z.object({
         summary: z.string().describe("A comprehensive summary of the content"),
-    }),
+      }),
     },
     ResearchState
   );
 
   return {
     url,
-    summary: (result as any).summary
+    summary: (result as any).summary,
   };
 }
 
@@ -123,4 +132,45 @@ export async function processSearchResults(
       };
     });
   return newFindings;
+}
+
+export async function analyzeFindings(
+  ResearchState: ResearchState,
+  currentQueries: string[],
+  currentIteration: number
+) {
+  try {
+    const contentText = combineFindings(ResearchState.findings);
+    const result = await callModel(
+      {
+        model: MODELS.ANALYSIS,
+        prompt: getAnalysisPrompt(
+          contentText,
+          ResearchState.topic,
+          ResearchState.clarificationsText,
+          currentQueries,
+          currentIteration,
+          MAX_ITERATIONS,
+          contentText.length
+        ),
+        system: ANALYSIS_SYSTEM_PROMPT,
+        schema: z.object({
+          sufficient: z
+            .boolean()
+            .describe(
+              "Whether the content is sufficient for a comprehensive report"
+            ),
+          gaps: z.array(z.string()).describe("Identified gaps in the content"),
+          queries: z
+            .array(z.string())
+            .describe("Search queries for missing information. Max 3 queries"),
+        }),
+      },
+      ResearchState
+    );
+
+    return result;
+  } catch (error) {
+    console.log("Error in analyzeFindings", error);
+  }
 }

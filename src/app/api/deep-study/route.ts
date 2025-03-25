@@ -22,7 +22,7 @@ export async function POST(req: Request) {
           clarificationsText: JSON.stringify(clarifications),
         };
         const result = await deepResearch(researchState, dataStream);
-        console.log("Data", result);
+        // console.log("Data", result);
       },
       // onError: error => `Custom error: ${error.message}`,
     });

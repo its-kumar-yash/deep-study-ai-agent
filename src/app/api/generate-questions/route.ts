@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   console.log("Topic:", topic);
   try {
     const questions = await clarifyResearchGoals(topic);
-    console.log("Questions:", questions);
+    // console.log("Questions:", questions);
     return NextResponse.json({
       questions,
     });

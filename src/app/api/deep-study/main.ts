@@ -1,4 +1,6 @@
+import { MAX_ITERATIONS } from "./constants";
 import {
+  analyzeFindings,
   generateSearchQueries,
   processSearchResults,
   search,
@@ -9,10 +11,17 @@ export async function deepResearch(
   researchState: ResearchState,
   dataStream: any
 ) {
+  let iteration = 0;
   const initialQueries = await generateSearchQueries(researchState);
   let currentQueries = (initialQueries as any).searchQueries;
-
-  while (currentQueries && currentQueries.length > 0) {
+  console.log("We have started the research");
+  while (
+    currentQueries &&
+    currentQueries.length > 0 &&
+    iteration < MAX_ITERATIONS
+  ) {
+    console.log("Generating search results for iteration", iteration);
+    iteration++;
     const searchResults = currentQueries.map((query: string) =>
       search(query, researchState)
     );
@@ -29,14 +38,32 @@ export async function deepResearch(
       researchState
     );
 
+    console.log("New Findings", newFindings);
+
     researchState.findings = [...researchState.findings, ...newFindings];
 
-    console.log(newFindings);
+    const analysis = await analyzeFindings(
+      researchState,
+      currentQueries,
+      iteration
+    );
+
+    console.log("Analysis", analysis);
+
+    if ((analysis as any).sufficient) {
+      break;
+    }
 
     //process the search results
 
-    currentQueries = [];
+    currentQueries = ((analysis as any).queries || []).filter(
+      (query: string) => !currentQueries.include(query)
+    );
   }
+
+  console.log("Completed", researchState.completedSteps);
+  console.log("Token Used", researchState.tokenUsed);
+  console.log("Findings", researchState.findings);
 
   return initialQueries;
 }
