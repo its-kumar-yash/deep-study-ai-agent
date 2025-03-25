@@ -21,9 +21,22 @@ export interface ModelCallOptions<T> {
   schema?: z.ZodType<T>;
 }
 
-
 export interface SearchResult {
   title: string;
   url: string;
   content: string;
 }
+
+export interface Activity {
+  type: "search" | "analyze" | "extract" | "generate" | "planning";
+  status: "pending" | "complete" | "error" | "warning";
+  message: string;
+}
+
+export type ActivityTracker = {
+  add: (
+    type: Activity["type"],
+    status: Activity["status"],
+    message: Activity["message"]
+  ) => void;
+};

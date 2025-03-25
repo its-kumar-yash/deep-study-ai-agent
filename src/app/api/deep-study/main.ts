@@ -1,3 +1,4 @@
+import { timeStamp } from "console";
 import { MAX_ITERATIONS } from "./constants";
 import {
   analyzeFindings,
@@ -7,15 +8,23 @@ import {
   search,
 } from "./research-functions";
 import { ResearchState, SearchResult } from "./type";
+import { createActivityTracker } from "./activity-tracker";
 
 export async function deepResearch(
   researchState: ResearchState,
   dataStream: any
 ) {
   let iteration = 0;
-  const initialQueries = await generateSearchQueries(researchState);
+
+  const activityTracker = createActivityTracker(dataStream, researchState);
+
+  const initialQueries = await generateSearchQueries(
+    researchState,
+    activityTracker
+  );
   let currentQueries = (initialQueries as any).searchQueries;
   console.log("We have started the research");
+
   while (
     currentQueries &&
     currentQueries.length > 0 &&
@@ -24,7 +33,7 @@ export async function deepResearch(
     console.log("Generating search results for iteration", iteration);
     iteration++;
     const searchResults = currentQueries.map((query: string) =>
-      search(query, researchState)
+      search(query, researchState, activityTracker)
     );
     const searchResultsResponses = await Promise.allSettled(searchResults);
     const allSearchResults = searchResultsResponses
@@ -36,7 +45,8 @@ export async function deepResearch(
 
     const newFindings = await processSearchResults(
       allSearchResults,
-      researchState
+      researchState,
+      activityTracker
     );
 
     console.log("New Findings", newFindings);
@@ -46,7 +56,8 @@ export async function deepResearch(
     const analysis = await analyzeFindings(
       researchState,
       currentQueries,
-      iteration
+      iteration,
+      activityTracker
     );
 
     console.log("Analysis", analysis);
@@ -65,7 +76,7 @@ export async function deepResearch(
   console.log("Completed", researchState.completedSteps);
   console.log("Token Used", researchState.tokenUsed);
   console.log("Findings", researchState.findings);
-  const report = await generateReport(researchState);
+  const report = await generateReport(researchState, activityTracker);
   console.log("Report", report);
 
   return initialQueries;

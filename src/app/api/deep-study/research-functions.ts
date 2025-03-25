@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { ResearchFindings, ResearchState, SearchResult } from "./type";
+import {
+  ActivityTracker,
+  ResearchFindings,
+  ResearchState,
+  SearchResult,
+} from "./type";
 import { callModel } from "./model-caller";
 import {
   ANALYSIS_SYSTEM_PROMPT,
@@ -20,7 +25,12 @@ import {
   MODELS,
 } from "./constants";
 
-export async function generateSearchQueries(researchState: ResearchState) {
+export async function generateSearchQueries(
+  researchState: ResearchState,
+  activityTracker: ActivityTracker
+) {
+  activityTracker.add("planning", "pending", "Planning the research");
+
   const result = await callModel(
     {
       model: MODELS.PLANNING,
@@ -40,13 +50,18 @@ export async function generateSearchQueries(researchState: ResearchState) {
     researchState
   );
 
+  activityTracker.add("planning", "complete", "Crafted the research plan");
+
   return result;
 }
 
 export async function search(
   query: string,
-  ResearchState: ResearchState
+  ResearchState: ResearchState,
+  activityTracker: ActivityTracker
 ): Promise<SearchResult[]> {
+  activityTracker.add("search", "pending", `Searching for: ${query}`);
+
   try {
     const searchResult = await exa.searchAndContents(query, {
       type: "keyword",
@@ -74,6 +89,13 @@ export async function search(
       }));
 
     ResearchState.completedSteps++;
+
+    activityTracker.add(
+      "search",
+      "complete",
+      `Found ${filteredResults.length} results for: ${query}`
+    );
+
     return filteredResults;
   } catch (error) {
     console.log("Error in search function", error);
@@ -84,8 +106,10 @@ export async function search(
 export async function extractContent(
   content: string,
   url: string,
-  ResearchState: ResearchState
+  ResearchState: ResearchState,
+  activityTracker: ActivityTracker
 ) {
+  activityTracker.add("extract", "pending", `Extracting content from ${url}`);
   const result = await callModel(
     {
       model: MODELS.EXTRACTION,
@@ -102,6 +126,8 @@ export async function extractContent(
     ResearchState
   );
 
+  activityTracker.add("extract", "complete", `Extracted content from ${url}`);
+  
   return {
     url,
     summary: (result as any).summary,
@@ -110,10 +136,12 @@ export async function extractContent(
 
 export async function processSearchResults(
   searchResults: SearchResult[],
-  ResearchState: ResearchState
+  ResearchState: ResearchState,
+  activityTracker: ActivityTracker
 ): Promise<ResearchFindings[]> {
+
   const extractionPromises = searchResults.map((result) =>
-    extractContent(result.content, result.url, ResearchState)
+    extractContent(result.content, result.url, ResearchState, activityTracker)
   );
   const extractionResult = await Promise.allSettled(extractionPromises);
 
@@ -139,9 +167,11 @@ export async function processSearchResults(
 export async function analyzeFindings(
   ResearchState: ResearchState,
   currentQueries: string[],
-  currentIteration: number
+  currentIteration: number,
+  activityTracker: ActivityTracker
 ) {
   try {
+    activityTracker.add("analyze", "pending", `Analyzing research findings (iteration ${currentIteration}) of ${MAX_ITERATIONS}`);
     const contentText = combineFindings(ResearchState.findings);
     const result = await callModel(
       {
@@ -171,6 +201,10 @@ export async function analyzeFindings(
       ResearchState
     );
 
+    const isContentSufficient = (result as any).sufficient;
+
+    activityTracker.add("analyze", "complete", `Analyzed collected research findings: ${isContentSufficient ? "Content is sufficient" : "More information is needed"}`);
+
     return result;
   } catch (error) {
     console.log("Error in analyzeFindings", error);
@@ -178,21 +212,27 @@ export async function analyzeFindings(
 }
 
 export async function generateReport(
-    researchState: ResearchState
-){
-    try{
-        const content = combineFindings(researchState.findings);
-        const report = await callModel({
-            model: MODELS.REPORT,
-            prompt: getReportPrompt(
-                content,
-                researchState.topic,
-                researchState.clarificationsText
-            ),
-            system: REPORT_SYSTEM_PROMPT,
-        }, researchState);
-        return report;
-    } catch(error){
-        console.log("Error in generateReport", error);
-    }
+  researchState: ResearchState,
+  activityTracker: ActivityTracker
+) {
+  try {
+    activityTracker.add("generate", "pending", `Generating comprehensive report!`);
+    const content = combineFindings(researchState.findings);
+    const report = await callModel(
+      {
+        model: MODELS.REPORT,
+        prompt: getReportPrompt(
+          content,
+          researchState.topic,
+          researchState.clarificationsText
+        ),
+        system: REPORT_SYSTEM_PROMPT,
+      },
+      researchState
+    );
+    activityTracker.add("generate", "complete", `Generated comprehensive report, Total token used: ${researchState.tokenUsed}. Research completed in ${researchState.completedSteps} steps.`);
+    return report;
+  } catch (error) {
+    console.log("Error in generateReport", error);
+  }
 }
