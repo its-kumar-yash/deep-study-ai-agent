@@ -1,6 +1,7 @@
 import { MAX_ITERATIONS } from "./constants";
 import {
   analyzeFindings,
+  generateReport,
   generateSearchQueries,
   processSearchResults,
   search,
@@ -64,6 +65,8 @@ export async function deepResearch(
   console.log("Completed", researchState.completedSteps);
   console.log("Token Used", researchState.tokenUsed);
   console.log("Findings", researchState.findings);
+  const report = await generateReport(researchState);
+  console.log("Report", report);
 
   return initialQueries;
 }

@@ -10,6 +10,6 @@ export const MODELS = {
   PLANNING: "google/gemini-2.0-pro-exp-02-05:free",
   EXTRACTION: "google/gemini-2.0-flash-lite-preview-02-05:free",
   ANALYSIS: "google/gemini-2.0-pro-exp-02-05:free",
-  REPORT: "google/gemini-2.0-flash-thinking-exp:free"
+  REPORT: "mistralai/mistral-small-3.1-24b-instruct:free"
   // REPORT: "anthropic/claude-3.7-sonnet:thinking",
 }; 

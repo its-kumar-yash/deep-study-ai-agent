@@ -7,7 +7,9 @@ import {
   getAnalysisPrompt,
   getExtractionPrompt,
   getPlanningPrompt,
+  getReportPrompt,
   PLANNING_SYSTEM_PROMPT,
+  REPORT_SYSTEM_PROMPT,
 } from "./prompts";
 import { exa } from "./services";
 import { combineFindings } from "./utils";
@@ -173,4 +175,24 @@ export async function analyzeFindings(
   } catch (error) {
     console.log("Error in analyzeFindings", error);
   }
+}
+
+export async function generateReport(
+    researchState: ResearchState
+){
+    try{
+        const content = combineFindings(researchState.findings);
+        const report = await callModel({
+            model: MODELS.REPORT,
+            prompt: getReportPrompt(
+                content,
+                researchState.topic,
+                researchState.clarificationsText
+            ),
+            system: REPORT_SYSTEM_PROMPT,
+        }, researchState);
+        return report;
+    } catch(error){
+        console.log("Error in generateReport", error);
+    }
 }
