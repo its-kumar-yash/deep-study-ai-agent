@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔍 DeepStudy AI
 
-## Getting Started
+DeepStudy AI is an advanced research assistant that helps generate comprehensive reports based on a given topic. By leveraging AI models like DeepSeek, Llama3, Gemma2, and Gemini (via OpenRouter and Groq), this system refines research queries, performs web searches, and compiles structured reports with relevant insights.
 
-First, run the development server:
+## 📸 Preview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+<p>
+  <img src="./public/demo1.png" alt="img-demo1"></img>
+  <img src="./public/demo2.png" alt="img-demo2"></img>
+</p>
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🧠 AI-Driven Research Workflow
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+<p>
+  <img src="./public/AI Agent WorkFLow.png" alt="workflow"></img>
+</p>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+DeepStudy AI follows an iterative research process:
 
-## Learn More
+1. **Topic Input & Clarification** – Users enter a topic, and the system generates follow-up questions to improve research quality.
+2. **Research Plan Generation** – Based on user input, it formulates a research strategy.
+3. **Web Search (Exa AI API)** – Queries are optimized and executed to fetch relevant content.
+4. **Content Extraction & Filtering** – Retrieved data is analyzed for relevance.
+5. **Iterative Research Loop** – If necessary, the system refines queries and repeats searches to enhance report quality.
+6. **Report Generation** – A structured and well-researched report is compiled.
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Key Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 🔧 **Fully Customizable Research Flow**
+- 🔍 **Adaptive Search Queries** for better results
+- ⚙️ **Seamless AI Model Integration** (DeepSeek, Llama3, Gemma2, Gemini)
+- 💼 **Modular & Scalable Architecture**
+- 🌐 **Built with Next.js & Vercel AI SDK**
+- ♻️ **Iterative Research Process** for accuracy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠️ Tech Stack
 
-## Deploy on Vercel
+- **Framework**: Next.js
+- **Styling**: Tailwind CSS, Shadcn UI
+- **AI Integration**: Vercel AI SDK
+- **LLMs**: Gemini, DeepSeek, Llama3, Gemma2 (via OpenRouter & Groq)
+- **Web Search**: Exa Search API
+- **Language**: TypeScript
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📌 Prerequisites
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Before getting started, ensure you have:
+
+- An **OpenRouter API Key** (or alternative LLM providers like Groq)
+- An **Exa Search API Key**
+
+## 🔧 Setup Instructions
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/its-kumar-yash/deep-study-ai-agent
+   cd Deep-Research-AI-Agent
+   ```
+
+2. **Install Dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables**
+
+   - Create a `.env` file in the root directory.
+
+4. **Run the Development Server**
+
+   ```bash
+   npm run dev
+   ```
+
+   - Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🤝 Contributing
+
+We welcome contributions! Whether it's a bug fix, feature suggestion, or improvement, feel free to submit a pull request.
+
+## 📜 License
+
+Distributed under the MIT License. See `LICENSE` for more details.
+
+
+
