@@ -22,27 +22,31 @@ export async function deepResearch(
     researchState,
     activityTracker
   );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let currentQueries = (initialQueries as any).searchQueries;
-  console.log("We have started the research");
-
   while (
     currentQueries &&
     currentQueries.length > 0 &&
     iteration <= MAX_ITERATIONS
   ) {
-    console.log("Generating search results for iteration", iteration);
+    iteration++;
+
+    console.log("We are running on the itration number: ", iteration);
+
     const searchResults = currentQueries.map((query: string) =>
       search(query, researchState, activityTracker)
     );
     const searchResultsResponses = await Promise.allSettled(searchResults);
+
     const allSearchResults = searchResultsResponses
       .filter(
-        (result) => result.status == "fulfilled" && result.value.length > 0
+        (result): result is PromiseFulfilledResult<any> =>
+          result.status === "fulfilled" && result.value.length > 0
       )
-      .map((result) => (result as PromiseFulfilledResult<SearchResult[]>).value)
+      .map((result) => result.value)
       .flat();
 
-    console.log("Search Results", allSearchResults);
+    console.log(`We got ${allSearchResults.length} search results!`);
 
     const newFindings = await processSearchResults(
       allSearchResults,
@@ -50,7 +54,8 @@ export async function deepResearch(
       activityTracker
     );
 
-    console.log("New Findings", newFindings);
+    console.log("Results are processed!");
+    console.log("New Findings: ", newFindings);
 
     researchState.findings = [...researchState.findings, ...newFindings];
 
@@ -61,23 +66,18 @@ export async function deepResearch(
       activityTracker
     );
 
-    console.log("Analysis", analysis);
+    console.log("Analysis: ", analysis);
 
-    if ((analysis as any).sufficient === true) {
-      console.log("Research is complete");
+    if ((analysis as any).sufficient) {
       break;
     }
 
-    //process the search results
-    console.log("Processing search results");
-
     currentQueries = ((analysis as any).queries || []).filter(
-      (query: string) => !currentQueries.include(query)
-    ); 
-    console.log("Current Queries", currentQueries);
-    iteration++;
-    console.log("Iteration", iteration);
+      (query: string) => !currentQueries.includes(query)
+    );
   }
+
+  console.log("We are outside of the loop with total iterations: ", iteration);
 
   const report = await generateReport(researchState, activityTracker);
 
@@ -86,7 +86,7 @@ export async function deepResearch(
     content: report,
   });
 
-  console.log("Report", report);
+  // console.log("REPORT: ", report)
 
   return initialQueries;
 }

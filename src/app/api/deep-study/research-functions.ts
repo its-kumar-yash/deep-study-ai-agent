@@ -17,7 +17,7 @@ import {
   REPORT_SYSTEM_PROMPT,
 } from "./prompts";
 import { exa } from "./services";
-import { combineFindings } from "./utils";
+import { combineFindings, handleError } from "./utils";
 import {
   MAX_CONTENT_CHARS,
   MAX_ITERATIONS,
@@ -29,30 +29,48 @@ export async function generateSearchQueries(
   researchState: ResearchState,
   activityTracker: ActivityTracker
 ) {
-  activityTracker.add("planning", "pending", "Planning the research");
+  try {
+    activityTracker.add("planning", "pending", "Planning the research");
 
-  const result = await callModel(
-    {
-      model: MODELS.PLANNING,
-      prompt: getPlanningPrompt(
-        researchState.topic,
-        researchState.clarificationsText
-      ),
-      system: PLANNING_SYSTEM_PROMPT,
-      schema: z.object({
-        searchQueries: z
-          .array(z.string())
-          .describe(
-            "The search queries that can be used to find the most relevent content which can be used to write the comprehensive report on the given topic. (max 3 queries)"
-          ),
-      }),
-    },
-    researchState
-  );
+    const result = await callModel(
+      {
+        model: MODELS.PLANNING,
+        prompt: getPlanningPrompt(
+          researchState.topic,
+          researchState.clarificationsText
+        ),
+        system: PLANNING_SYSTEM_PROMPT,
+        schema: z.object({
+          searchQueries: z
+            .array(z.string())
+            .describe(
+              "The search queries that can be used to find the most relevent content which can be used to write the comprehensive report on the given topic. (max 3 queries)"
+            ),
+        }),
+        activityType: "planning",
+      },
+      researchState,
+      activityTracker
+    );
 
-  activityTracker.add("planning", "complete", "Crafted the research plan");
+    activityTracker.add("planning", "complete", "Crafted the research plan");
 
-  return result;
+    return result;
+  } catch (error) {
+    return handleError(
+      error,
+      `Research planning`,
+      activityTracker,
+      "planning",
+      {
+        searchQueries: [
+          `${researchState.topic} best practices`,
+          `${researchState.topic} guidelines`,
+          `${researchState.topic} research`,
+        ],
+      }
+    );
+  }
 }
 
 export async function search(
@@ -99,7 +117,15 @@ export async function search(
     return filteredResults;
   } catch (error) {
     console.log("Error in search function", error);
-    return [];
+    return (
+      handleError(
+        error,
+        `Searching for: ${query}`,
+        activityTracker,
+        "search",
+        []
+      ) || []
+    );
   }
 }
 
@@ -109,29 +135,45 @@ export async function extractContent(
   ResearchState: ResearchState,
   activityTracker: ActivityTracker
 ) {
-  activityTracker.add("extract", "pending", `Extracting content from ${url}`);
-  const result = await callModel(
-    {
-      model: MODELS.EXTRACTION,
-      prompt: getExtractionPrompt(
-        content,
-        ResearchState.topic,
-        ResearchState.clarificationsText
-      ),
-      system: EXTRACTION_SYSTEM_PROMPT,
-      schema: z.object({
-        summary: z.string().describe("A comprehensive summary of the content"),
-      }),
-    },
-    ResearchState
-  );
+  try {
+    activityTracker.add("extract", "pending", `Extracting content from ${url}`);
+    const result = await callModel(
+      {
+        model: MODELS.EXTRACTION,
+        prompt: getExtractionPrompt(
+          content,
+          ResearchState.topic,
+          ResearchState.clarificationsText
+        ),
+        system: EXTRACTION_SYSTEM_PROMPT,
+        schema: z.object({
+          summary: z
+            .string()
+            .describe("A comprehensive summary of the content"),
+        }),
+        activityType: "extract",
+      },
+      ResearchState,
+      activityTracker
+    );
 
-  activityTracker.add("extract", "complete", `Extracted content from ${url}`);
-  
-  return {
-    url,
-    summary: (result as any).summary,
-  };
+    activityTracker.add("extract", "complete", `Extracted content from ${url}`);
+
+    return {
+      url,
+      summary: (result as any).summary,
+    };
+  } catch (error) {
+    return (
+      handleError(
+        error,
+        `Content extraction from: ${url}`,
+        activityTracker,
+        "extract",
+        null
+      ) || null
+    );
+  }
 }
 
 export async function processSearchResults(
@@ -171,7 +213,11 @@ export async function analyzeFindings(
   activityTracker: ActivityTracker
 ) {
   try {
-    activityTracker.add("analyze", "pending", `Analyzing research findings (iteration ${currentIteration}) of ${MAX_ITERATIONS}`);
+    activityTracker.add(
+      "analyze",
+      "pending",
+      `Analyzing research findings (iteration ${currentIteration}) of ${MAX_ITERATIONS}`
+    );
     const contentText = combineFindings(ResearchState.findings);
     const result = await callModel(
       {
@@ -197,17 +243,32 @@ export async function analyzeFindings(
             .array(z.string())
             .describe("Search queries for missing information. Max 3 queries"),
         }),
+        activityType: "analyze",
       },
-      ResearchState
+      ResearchState,
+      activityTracker
     );
 
     const isContentSufficient = (result as any).sufficient;
-  
-    activityTracker.add("analyze", "complete", `Analyzed collected research findings: ${isContentSufficient ? "Content is sufficient" : "More information is needed"}`);
+
+    activityTracker.add(
+      "analyze",
+      "complete",
+      `Analyzed collected research findings: ${
+        isContentSufficient
+          ? "Content is sufficient"
+          : "More information is needed"
+      }`
+    );
 
     return result;
   } catch (error) {
     console.log("Error in analyzeFindings", error);
+    return handleError(error, `Content analysis`, activityTracker, "analyze", {
+      sufficient: false,
+      gaps: ["Error in content analysis"],
+      queries: ["Please try a different search query"],
+    });
   }
 }
 
@@ -216,7 +277,11 @@ export async function generateReport(
   activityTracker: ActivityTracker
 ) {
   try {
-    activityTracker.add("generate", "pending", `Generating comprehensive report!`);
+    activityTracker.add(
+      "generate",
+      "pending",
+      `Generating comprehensive report!`
+    );
     const content = combineFindings(researchState.findings);
     const report = await callModel(
       {
@@ -227,12 +292,25 @@ export async function generateReport(
           researchState.clarificationsText
         ),
         system: REPORT_SYSTEM_PROMPT,
+        activityType: "generate",
       },
-      researchState
+      researchState,
+      activityTracker
     );
-    activityTracker.add("generate", "complete", `Generated comprehensive report, Total token used: ${researchState.tokenUsed}. Research completed in ${researchState.completedSteps} steps.`);
+    activityTracker.add(
+      "generate",
+      "complete",
+      `Generated comprehensive report, Total token used: ${researchState.tokenUsed}. Research completed in ${researchState.completedSteps} steps.`
+    );
     return report;
   } catch (error) {
     console.log("Error in generateReport", error);
+    return handleError(
+      error,
+      `Report generation`,
+      activityTracker,
+      "generate",
+      "Error in report generation"
+    );
   }
 }

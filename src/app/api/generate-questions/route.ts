@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { z } from "zod";
+import { groq } from "../deep-study/services";
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY || "",
@@ -20,7 +21,7 @@ const clarifyResearchGoals = async (topic: string) => {
     `;
   try {
     const { object } = await generateObject({
-      model: openrouter("google/gemini-2.0-flash-lite-preview-02-05:free"),
+      model: groq("deepseek-r1-distill-llama-70b"),
       prompt,
       schema: z.object({
         questions: z.array(z.string()),
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
   console.log("Topic:", topic);
   try {
     const questions = await clarifyResearchGoals(topic);
-    // console.log("Questions:", questions);
+    console.log("Questions:", questions);
     return NextResponse.json({
       questions,
     });

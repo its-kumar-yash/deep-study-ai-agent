@@ -19,7 +19,7 @@ type CodeProps = ComponentPropsWithRef<"code"> & {
 
 const ResearchReport = () => {
   const { report, isCompleted, isLoading, topic } = useDeepStudyStore();
-
+  if(report === undefined) return null;
   const handleMarkdownDownload = () => {
     const content = report.split("<report>")[1].split("</report>")[0];
     const blob = new Blob([content], { type: "text/markdown" });
