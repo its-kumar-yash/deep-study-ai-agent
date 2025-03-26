@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { generateObject } from "ai";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+// import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { z } from "zod";
 import { groq } from "../deep-study/services";
 
-const openrouter = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY || "",
-});
+// const openrouter = createOpenRouter({
+//   apiKey: process.env.OPENROUTER_API_KEY || "",
+// });
 
 const clarifyResearchGoals = async (topic: string) => {
   const prompt = `

@@ -1,4 +1,5 @@
-import { timeStamp } from "console";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { MAX_ITERATIONS } from "./constants";
 import {
   analyzeFindings,
@@ -7,7 +8,7 @@ import {
   processSearchResults,
   search,
 } from "./research-functions";
-import { ResearchState, SearchResult } from "./type";
+import { ResearchState } from "./type";
 import { createActivityTracker } from "./activity-tracker";
 
 export async function deepResearch(
