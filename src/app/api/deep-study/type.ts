@@ -31,6 +31,7 @@ export interface Activity {
   type: "search" | "analyze" | "extract" | "generate" | "planning";
   status: "pending" | "complete" | "error" | "warning";
   message: string;
+  timestamp?: number;
 }
 
 export type ActivityTracker = {
@@ -40,3 +41,8 @@ export type ActivityTracker = {
     message: Activity["message"]
   ) => void;
 };
+
+export interface Source {
+  url: string;
+  title: string;
+}

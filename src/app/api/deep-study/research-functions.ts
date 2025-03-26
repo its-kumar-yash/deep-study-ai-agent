@@ -136,21 +136,20 @@ export async function extractContent(
 
 export async function processSearchResults(
   searchResults: SearchResult[],
-  ResearchState: ResearchState,
+  researchState: ResearchState,
   activityTracker: ActivityTracker
 ): Promise<ResearchFindings[]> {
-
   const extractionPromises = searchResults.map((result) =>
-    extractContent(result.content, result.url, ResearchState, activityTracker)
+    extractContent(result.content, result.url, researchState, activityTracker)
   );
-  const extractionResult = await Promise.allSettled(extractionPromises);
+  const extractionResults = await Promise.allSettled(extractionPromises);
 
   type ExtractionResult = { url: string; summary: string };
 
-  const newFindings = extractionResult
+  const newFindings = extractionResults
     .filter(
       (result): result is PromiseFulfilledResult<ExtractionResult> =>
-        result.status == "fulfilled" &&
+        result.status === "fulfilled" &&
         result.value !== null &&
         result.value !== undefined
     )
@@ -161,6 +160,7 @@ export async function processSearchResults(
         source: url,
       };
     });
+
   return newFindings;
 }
 
@@ -202,7 +202,7 @@ export async function analyzeFindings(
     );
 
     const isContentSufficient = (result as any).sufficient;
-
+  
     activityTracker.add("analyze", "complete", `Analyzed collected research findings: ${isContentSufficient ? "Content is sufficient" : "More information is needed"}`);
 
     return result;
