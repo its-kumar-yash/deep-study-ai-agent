@@ -17,7 +17,7 @@ export const RETRY_DELAY_MS = 1000; // It is the delay in milliseconds between r
 // groq models
 export const MODELS = {
   PLANNING: "llama-3.3-70b-versatile",
-  EXTRACTION: "deepseek-r1-distill-qwen-32b",
+  EXTRACTION: "gemma2-9b-it",
   ANALYSIS: "deepseek-r1-distill-llama-70b",
   REPORT: "deepseek-r1-distill-llama-70b"
   // REPORT: "anthropic/claude-3.7-sonnet:thinking",

@@ -21,7 +21,7 @@ export async function POST(req: Request) {
           processedUrl: new Set(),
           clarificationsText: JSON.stringify(clarifications),
         };
-        const result = await deepResearch(researchState, dataStream);
+        // const result = await deepResearch(researchState, dataStream);
         // console.log("Data", result);
       },
       // onError: error => `Custom error: ${error.message}`,

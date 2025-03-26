@@ -54,13 +54,13 @@ export default function QuestionForm() {
     }
   }
 
-  //   if(isCompleted) return;
+    if(isCompleted) return;
 
-  if (!questions || questions.length === 0 || !questions[currentQuestion]) return null;
-
+  if (!questions || questions.length === 0 || !questions[currentQuestion])
+    return null;
 
   return (
-    <Card className="w-full max-w-[90vw] sm:max-w-[80vw] xl:max-w-[50vw] shadow-none">
+    <Card className="w-full max-w-[90vw] sm:max-w-[80vw] xl:max-w-[50vw] shadow-none bg-white/60 backdrop-blur-sm border rounded-xl border-black/10 border-solid">
       <CardHeader className="px-4 sm:px-6">
         <CardTitle className="text-base text-primary/50">
           Question {currentQuestion + 1} of {questions.length}
@@ -103,10 +103,7 @@ export default function QuestionForm() {
               >
                 Previous
               </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-              >
+              <Button type="submit" disabled={isLoading}>
                 {currentQuestion === questions.length - 1
                   ? "Start Research"
                   : "Next"}

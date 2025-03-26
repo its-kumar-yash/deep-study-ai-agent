@@ -7,6 +7,7 @@ import { useChat } from "@ai-sdk/react";
 import ResearchActivity from "./ResearchActivity";
 import ResearchReport from "./ResearchReport";
 import ResearchTimer from "./ResearchTimer";
+import CompletedQuestions from "./CompletedQuestions";
 
 export default function QnA() {
   const {
@@ -73,6 +74,7 @@ export default function QnA() {
   return (
     <div className="flex gap-4 w-full flex-col items-center mb-16">
       <QuestionForm />
+      <CompletedQuestions />
       <ResearchActivity />
       <ResearchTimer />
       <ResearchReport />
