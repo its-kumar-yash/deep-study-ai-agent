@@ -2,8 +2,6 @@ import { createDataStreamResponse } from "ai";
 import { ResearchState } from "./type";
 import { deepResearch } from "./main";
 
-export const maxDuration = 300;
-
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
