@@ -18,7 +18,7 @@ import {
   PLANNING_SYSTEM_PROMPT,
   REPORT_SYSTEM_PROMPT,
 } from "./prompts";
-import { exa } from "./services";
+import { exa, groq } from "./services";
 import { combineFindings, handleError } from "./utils";
 import {
   MAX_CONTENT_CHARS,
@@ -26,6 +26,7 @@ import {
   MAX_SEARCH_RESULTS,
   MODELS,
 } from "./constants";
+import { streamText } from "ai";
 
 export async function generateSearchQueries(
   researchState: ResearchState,
@@ -276,7 +277,8 @@ export async function analyzeFindings(
 
 export async function generateReport(
   researchState: ResearchState,
-  activityTracker: ActivityTracker
+  activityTracker: ActivityTracker,
+  dataStream: any
 ) {
   try {
     activityTracker.add(
@@ -285,25 +287,38 @@ export async function generateReport(
       `Generating comprehensive report!`
     );
     const content = combineFindings(researchState.findings);
-    const report = await callModel(
-      {
-        model: MODELS.REPORT,
-        prompt: getReportPrompt(
-          content,
-          researchState.topic,
-          researchState.clarificationsText
-        ),
-        system: REPORT_SYSTEM_PROMPT,
-        activityType: "generate",
-      },
-      researchState,
-      activityTracker
+    const prompt = getReportPrompt(
+      content,
+      researchState.topic,
+      researchState.clarificationsText
     );
+    // const report = await callModel(
+    //   {
+    //     model: MODELS.REPORT,
+    //     prompt: prompt,
+    //     system: REPORT_SYSTEM_PROMPT,
+    //     activityType: "generate",
+    //   },
+    //   researchState,
+    //   activityTracker
+    // );
+    const streamResult = await streamText({
+      model: groq(MODELS.REPORT),
+      prompt,
+      system: REPORT_SYSTEM_PROMPT,
+    });
+
+    let report = "";
+    for await (const chunk of streamResult.textStream) {
+      report += chunk;
+      dataStream.writeData({ type: "report_chunk", content: chunk });
+    }
     activityTracker.add(
       "generate",
       "complete",
       `Generated comprehensive report, Total token used: ${researchState.tokenUsed}. Research completed in ${researchState.completedSteps} steps.`
     );
+    dataStream.writeData({ type: "report_complete", content: report });
     return report;
   } catch (error) {
     console.log("Error in generateReport", error);

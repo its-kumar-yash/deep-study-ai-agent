@@ -80,7 +80,7 @@ export async function deepResearch(
 
   console.log("We are outside of the loop with total iterations: ", iteration);
 
-  const report = await generateReport(researchState, activityTracker);
+  const report = await generateReport(researchState, activityTracker, dataStream);
 
   dataStream.writeData({
     type: "report",
