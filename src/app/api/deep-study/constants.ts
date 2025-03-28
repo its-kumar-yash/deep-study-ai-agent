@@ -18,7 +18,7 @@ export const RETRY_DELAY_MS = 1000; // It is the delay in milliseconds between r
 export const MODELS = {
   PLANNING: "llama-3.3-70b-versatile",
   EXTRACTION: "llama3-70b-8192",
-  ANALYSIS: "llama-3.1-8b-instant",
+  ANALYSIS: "llama-guard-3-8b",
   REPORT: "gemma2-9b-it"
   // REPORT: "anthropic/claude-3.7-sonnet:thinking",
 }; 
